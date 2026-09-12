@@ -1,0 +1,28 @@
+// Presentation adapter only. Upload, text, finishes and card gestures live in studio.js.
+document.body.classList.add('phone');
+const phoneCss=document.createElement('link');phoneCss.rel='stylesheet';phoneCss.href='phone.css';document.head.append(phoneCss);
+const phoneStatus=document.createElement('div');phoneStatus.className='phone-status';phoneStatus.innerHTML='<span>9:41</span><div class="island" aria-hidden="true"></div><span aria-label="信号和电量">▮▮▮ &nbsp; ▰</span>';document.body.prepend(phoneStatus);
+const appHeader=document.querySelector('header');appHeader.innerHTML='<div><small>YOUR POCKET GALLERY</small><b>光的收藏室<span>✦</span></b></div><button class="phone-info" aria-label="使用说明">?</button>';
+const stage=document.querySelector('.stage'),main=document.querySelector('main');
+main.prepend(stage);
+const welcome=document.createElement('div');welcome.className='phone-card-meta';welcome.innerHTML='<span class="edition-pill">HOLOGRAPHIC / 001</span><h1>让每一张，都有光。</h1><p>轻点翻面，指尖滑动探索光泽</p>';stage.before(welcome);
+const quick=document.createElement('div');quick.className='phone-quick';quick.innerHTML='<span id="active-finish">方格镭射</span><div></div>';stage.after(quick);quick.lastElementChild.append(document.querySelector('#flip'),document.querySelector('#reset'));
+document.querySelector('#flip').textContent='翻面';document.querySelector('#reset').textContent='回正';
+appHeader.querySelector('.phone-info').setAttribute('aria-label','光效设置');appHeader.querySelector('.phone-info').textContent='☷';
+const settings=document.querySelector('.settings'),oldSection=settings.parentElement;
+const sheet=document.createElement('dialog');sheet.className='phone-sheet';sheet.setAttribute('aria-labelledby','sheet-title');sheet.innerHTML='<div class="sheet-grab" aria-label="向下拖动收起"><span></span></div><div class="sheet-head"><h2 id="sheet-title">设置</h2><button class="sheet-done">完成</button></div><div class="sheet-content"></div>';document.body.append(sheet);
+const content=sheet.querySelector('.sheet-content');content.append(settings);oldSection.remove();
+const adjust=document.createElement('div');adjust.className='phone-adjust';for(const node of [...settings.children])if(!node.matches('.upload-panel,.text-panel,.finish-panel'))adjust.append(node);settings.append(adjust);
+const panelMap={image:document.querySelector('.upload-panel'),text:document.querySelector('.text-panel'),finish:document.querySelector('.finish-panel'),adjust};
+const names={image:'更换卡面',text:'编辑文案',finish:'镭射材质',adjust:'光效设置'};
+const nav=document.createElement('nav');nav.className='phone-nav';nav.setAttribute('aria-label','卡片工具');nav.innerHTML=[['image','▧','图片'],['text','Aa','文案'],['finish','✧','材质'],['adjust','☷','调节']].map(([id,icon,name])=>`<button data-panel="${id}" aria-haspopup="dialog"><span>${icon}</span>${name}</button>`).join('');document.body.append(nav);
+document.querySelector('footer').remove();const home=document.createElement('div');home.className='home-indicator';home.setAttribute('aria-hidden','true');document.body.append(home);
+let sheetTrigger;
+function openPanel(id,trigger){sheetTrigger=trigger;for(const [key,panel] of Object.entries(panelMap))panel.hidden=key!==id;sheet.querySelector('#sheet-title').textContent=names[id];sheet.showModal();content.scrollTop=0;}
+nav.addEventListener('click',e=>{const button=e.target.closest('[data-panel]');if(button)openPanel(button.dataset.panel,button);});
+sheet.querySelector('.sheet-done').addEventListener('click',()=>sheet.close());
+sheet.addEventListener('click',e=>{if(e.target===sheet){const r=sheet.getBoundingClientRect();if(e.clientY<r.top||e.clientX<r.left||e.clientX>r.right)sheet.close();}});
+sheet.addEventListener('close',()=>{sheet.style.transform='';sheetTrigger?.focus();});
+const grab=sheet.querySelector('.sheet-grab');let sheetStart=null;grab.addEventListener('pointerdown',e=>{sheetStart=e.clientY;grab.setPointerCapture(e.pointerId);});grab.addEventListener('pointermove',e=>{if(sheetStart!==null)sheet.style.transform=`translateY(${Math.max(0,e.clientY-sheetStart)}px)`;});grab.addEventListener('pointerup',e=>{if(sheetStart!==null&&e.clientY-sheetStart>65)sheet.close();sheetStart=null;sheet.style.transform='';});grab.addEventListener('pointercancel',()=>{sheetStart=null;sheet.style.transform='';});
+document.querySelector('.finish-panel').addEventListener('change',e=>{if(e.target.name==='finish')document.querySelector('#active-finish').textContent=e.target.closest('label').lastElementChild.textContent;});
+appHeader.querySelector('.phone-info').addEventListener('click',()=>{openPanel('adjust',appHeader.querySelector('.phone-info'));});
