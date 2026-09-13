@@ -17,7 +17,9 @@
 - iPhone 外壳、灵动岛外观、底部工具栏和设置弹层；图片/文案/材质/调节均可在手机界面完成。
 - 无 npm、无构建、无框架、无 API key、无后台生成服务。
 
-这是**单图 CSS/SVG 镭射模拟**，不是 AI 抠图或真实全息显示。当前没有人物/背景分层视差、自动轮廓提取和图像导出。手机外壳是网页模拟，不是原生 iOS App。
+- 导出 PNG 静态图、GIF 循环动图、MP4/WebM 视频，桌面和手机共用导出模块。
+
+这是**单图 CSS/SVG 镭射模拟**，不是 AI 抠图或真实全息显示。当前没有人物/背景分层视差和自动轮廓提取。手机外壳是网页模拟，不是原生 iOS App。
 
 ## 马上使用
 
@@ -29,6 +31,29 @@
 6. 手机版点击“完成”、点面板外遮罩或向下拖动顶部短条收起面板。
 
 文件在浏览器内存中读取，不传到服务器。**刷新会清除选图及文案编辑**，也不会在两个页面间实时同步。恢复示例仅恢复默认图片，不覆盖文案。
+
+## 导出卡片
+
+1. 先选好图片、文案、材质、强度及纹理大小。
+2. 桌面版滚动至“导出卡片”；手机版点击底部“导出”。
+3. 选择 PNG、GIF 或视频，以及 480 × 672 / 720 × 1008 尺寸。
+4. 点击“生成文件”，保持页面在前台；可随时取消。完成后预览并点击“保存”。
+
+PNG 输出正面静态展示姿态；GIF 和视频输出预设的 4 秒柔和循环：光源沿椭圆移动，卡片轻微摆动和滑移。导出保留当前图片、文案开关、材质和强度，不包含操作界面、手机外壳或背面。背景为深色，不透明。生成不会改变当前卡片的角度或内容。
+
+GIF 采用 60 帧（约 15 fps）和每帧最多 256 色；渐变可能有色阶，尺寸越大生成越慢、文件越大。视频优先 MP4，浏览器不支持时输出 WebM，文件扩展名与实际编码一致。视频没有音轨。视频录制画布为 30 fps，源动画为 15 fps。iPhone 上保存位置和预览方式由 Safari/系统决定，未完成全部真机兼容测试。
+
+处理完全在本地浏览器中完成，不上传图片，也不请求录屏、摄像头或麦克风权限。通过 HTTP/HTTPS 打开，不能直接双击 HTML 使用 Worker 导出。进入后台会停止生成，以免保存掉帧视频。
+
+### 导出实现与接口
+
+`export.js` 复制正面 DOM 和当前样式，用本地打包的 `html-to-image@1.11.13` 将图片、文字和 CSS/SVG 光效合成为 Canvas；用户图片的 object URL 会先转换为 data URL。逐帧改变 `--mx`、`--my`、`--angle`，再用 Canvas 2D 仿射变换模拟轻微倾斜和滑移。这是设计好的展示轨迹，不是实际录下用户鼠标操作，也不是完整 CSS 3D 透视的逐像素复刻。
+
+- PNG：`HTMLCanvasElement.toBlob()`。
+- GIF：模块 Worker 中的 `gifenc@1.0.3`，调用 `quantize()`、`applyPalette()`、`GIFEncoder.writeFrame()` / `finish()`，主线程传输 RGBA ArrayBuffer，60 帧时长合计 4 秒，无限循环。选择它是为了直接在网页生成，无需安装 gifski/Rust。
+- 视频：预渲染 PNG 帧，`createImageBitmap()` 解码，`canvas.captureStream()` + `MediaRecorder` 录制；`MediaRecorder.isTypeSupported()` 探测格式，目标码率 6 Mbps。
+
+没有外部生成 API、付费接口或密钥。浏览器对 SVG foreignObject、CSS 混合和视频编码的实现不同，导出与现场效果可能略有差别；失败时尝试较小尺寸或另一个浏览器。
 
 ## 本地运行
 
@@ -129,6 +154,9 @@ skills/holo-card-preview/
     foil-library.css             扩展纹理与分组样式
     mobile.html                  iPhone 外壳
     phone.js / phone.css         手机布局适配
+    export.js / export.css       共享导出面板和逐帧渲染
+    gif-worker.js                GIF 量化与编码线程
+    vendor/                      固定版本浏览器依赖与许可证
     assets/explorer-v2.png        AI 生成的默认插画
 .github/workflows/pages.yml      Pages 自动发布
 ```

@@ -42,4 +42,14 @@ Pointer Events 统一处理鼠标和触摸。拖动起点到当前位置超过 5
 
 至少检查：两种入口、上传成功/错误、文案保留和开关、长标题、材质切换、0/最大强度、细/粗纹理、正反面、拖动/点击区分、手机面板收起。若新增设置，必须安排手机 `panelMap` 的位置；不要只给桌面加控件。
 
-当前属于浏览器 demo：未实现 AI 分层、自动背景补全、导出、状态持久化、相机、设备姿态或原生 iOS App。CSS 混合结果可能随浏览器不同；WebKit 真机兼容性需单独测试。窗口过小时，外壳缩放会令按钮实际显示较小，可直接用 `studio.html?phone=1` 测试无外壳页面。
+当前属于浏览器 demo：未实现 AI 分层、自动背景补全、状态持久化、相机、设备姿态或原生 iOS App。CSS 混合结果可能随浏览器不同；WebKit 真机兼容性需单独测试。窗口过小时，外壳缩放会令按钮实际显示较小，可直接用 `studio.html?phone=1` 测试无外壳页面。
+
+## 导出维护
+
+`studio.js` 加载 `export.js` 后再加载 `phone.js`，确保手机 `panelMap.export` 指向同一个导出面板。`export.css` 提供五列手机导航覆盖。新增格式只改共享模块，不另写手机编码器。
+
+导出复制当前卡片，图片转换为 data URL，保留原卡片选择器匹配及文案开关。捕获 `.front` 而非 3D 容器：3D/offscreen DOM 直接传给 SVG foreignObject 可能产生空白。`html-to-image` 展平卡面，Canvas 2D 再应用轻微仿射摆动与滑移；不要称作精确透视录屏。PNG 使用固定展示光位，GIF/视频使用正弦轨迹：光源 x=50+34sin(t)、y=50+28cos(t)，光带角=125+35sin(t)。60 帧覆盖一个 4 秒周期。
+
+GIF Worker 逐帧量化为最多 256 色并编码，传输 RGBA buffer；帧时长以 10ms 为单位交错分配，总计 4000ms。视频先准备全部 PNG 帧并解码，再由 captureStream(30) 和 MediaRecorder 实时记录约 4 秒；源帧率为 15fps。用 isTypeSupported 探测 MP4/WebM，保存扩展名与 Blob 类型一致。所有依赖在 vendor 中，不需要外网 CDN。
+
+保持页面前台，后台或取消时停止生成；finally 清理复制 DOM、Worker、录制轨道和 ImageBitmap。替换预览或离页时释放结果 URL。仅点击保存链接才下载，不上传卡面。导出固定深色背景，不包含背面、外壳或 UI。大尺寸会增加内存和耗时，低内存设备优先 480px。完整流程与接口说明见仓库 README“导出卡片”。

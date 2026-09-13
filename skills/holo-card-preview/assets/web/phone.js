@@ -12,10 +12,10 @@ appHeader.querySelector('.phone-info').setAttribute('aria-label','光效设置')
 const settings=document.querySelector('.settings'),oldSection=settings.parentElement;
 const sheet=document.createElement('dialog');sheet.className='phone-sheet';sheet.setAttribute('aria-labelledby','sheet-title');sheet.innerHTML='<div class="sheet-grab" aria-label="向下拖动收起"><span></span></div><div class="sheet-head"><h2 id="sheet-title">设置</h2><button class="sheet-done">完成</button></div><div class="sheet-content"></div>';document.body.append(sheet);
 const content=sheet.querySelector('.sheet-content');content.append(settings);oldSection.remove();
-const adjust=document.createElement('div');adjust.className='phone-adjust';for(const node of [...settings.children])if(!node.matches('.upload-panel,.text-panel,.finish-panel'))adjust.append(node);settings.append(adjust);
-const panelMap={image:document.querySelector('.upload-panel'),text:document.querySelector('.text-panel'),finish:document.querySelector('.finish-panel'),adjust};
-const names={image:'更换卡面',text:'编辑文案',finish:'镭射材质',adjust:'光效设置'};
-const nav=document.createElement('nav');nav.className='phone-nav';nav.setAttribute('aria-label','卡片工具');nav.innerHTML=[['image','▧','图片'],['text','Aa','文案'],['finish','✧','材质'],['adjust','☷','调节']].map(([id,icon,name])=>`<button data-panel="${id}" aria-haspopup="dialog"><span>${icon}</span>${name}</button>`).join('');document.body.append(nav);
+const adjust=document.createElement('div');adjust.className='phone-adjust';for(const node of [...settings.children])if(!node.matches('.upload-panel,.text-panel,.finish-panel,.export-panel'))adjust.append(node);settings.append(adjust);
+const panelMap={image:document.querySelector('.upload-panel'),text:document.querySelector('.text-panel'),finish:document.querySelector('.finish-panel'),adjust,export:document.querySelector('.export-panel')};
+const names={image:'更换卡面',text:'编辑文案',finish:'镭射材质',adjust:'光效设置',export:'导出卡片'};
+const nav=document.createElement('nav');nav.className='phone-nav';nav.setAttribute('aria-label','卡片工具');nav.innerHTML=[['image','▧','图片'],['text','Aa','文案'],['finish','✧','材质'],['adjust','☷','调节'],['export','↓','导出']].map(([id,icon,name])=>`<button data-panel="${id}" aria-haspopup="dialog"><span>${icon}</span>${name}</button>`).join('');document.body.append(nav);
 document.querySelector('footer').remove();const home=document.createElement('div');home.className='home-indicator';home.setAttribute('aria-hidden','true');document.body.append(home);
 let sheetTrigger;
 function openPanel(id,trigger){sheetTrigger=trigger;for(const [key,panel] of Object.entries(panelMap))panel.hidden=key!==id;sheet.querySelector('#sheet-title').textContent=names[id];sheet.showModal();content.scrollTop=0;}
