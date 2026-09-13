@@ -5,9 +5,17 @@ const panel=document.createElement('section');panel.className='export-panel';
 panel.innerHTML=`<h3>导出卡片</h3><div class="export-options"><label>格式<select id="export-format"><option value="png">PNG · 静态卡面</option><option value="gif">GIF · 循环动图</option><option value="video">视频 · 自动感光</option></select></label><label>画面尺寸<select id="export-size"><option value="480">480 × 672</option><option value="720">720 × 1008</option></select></label></div><p id="export-description">导出当前材质与文案的正面静态效果，含深色背景。</p><p class="export-note">动图与视频：4 秒柔和摆动 + 滑动感光，不录制界面或手机外壳。生成期间请保持本页可见。</p><div class="export-actions"><button id="export-start" type="button">生成文件</button><button id="export-cancel" class="export-cancel" type="button" hidden>取消</button></div><progress id="export-progress" max="100" value="0" hidden></progress><p id="export-status" role="status" aria-live="polite"></p><div id="export-result" hidden></div>`;
 document.querySelector('.settings').append(panel);
 const $=s=>panel.querySelector(s),format=$('#export-format'),size=$('#export-size'),start=$('#export-start'),cancel=$('#export-cancel'),status=$('#export-status'),progress=$('#export-progress'),result=$('#export-result');
-let busy=false,aborted=false,worker=null,resultURL=null,libPromise;
+let busy=false,aborted=false,worker=null,libPromise;
+const results=new Map();
+const resultKey=()=>`${format.value}:${size.value}`;
 const videoMime=()=>typeof MediaRecorder==='undefined'?'':['video/mp4;codecs=avc1.42001E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m=>MediaRecorder.isTypeSupported(m));
 format.addEventListener('change',()=>{$('#export-description').textContent=format.value==='png'?'导出当前材质与文案的正面静态效果，含深色背景。':format.value==='gif'?'GIF：60 帧 / 4 秒，无限循环。256 色量化可能使渐变略有颗粒。':`视频：4 秒，优先 MP4，当前浏览器${videoMime()?.startsWith('video/mp4')?'支持 MP4':videoMime()?'使用 WebM':'不支持视频编码'}。`;});
+function restoreResult(){
+  result.querySelector('video')?.pause();result.replaceChildren();result.hidden=true;
+  status.classList.remove('export-error');status.textContent='';progress.value=0;progress.hidden=true;cancel.hidden=true;start.textContent='生成文件';
+  const cached=results.get(resultKey());if(cached)renderResult(cached,true);
+}
+format.addEventListener('change',restoreResult);size.addEventListener('change',restoreResult);
 function loadLibrary(){if(!libPromise)libPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='vendor/html-to-image.js';s.onload=resolve;s.onerror=()=>{libPromise=null;s.remove();reject(new Error('截图组件加载失败，请刷新重试。'));};document.head.append(s);});return libPromise;}
 function check(){if(aborted)throw new DOMException('已取消','AbortError');if(document.hidden)throw new Error('页面进入后台，已停止生成。请保持页面可见后重试。');}
 const tick=()=>new Promise(r=>setTimeout(r,0));
@@ -18,7 +26,7 @@ function rpc(message,transfer=[]){return new Promise((resolve,reject)=>{const on
 async function snapshotSource(width){
   await document.fonts.ready;
   const source=document.querySelector('#card'),clone=source.cloneNode(true),host=document.createElement('div');
-  const height=Math.round(width*1.4),cardWidth=width*.80,cardHeight=cardWidth*1.4;
+  const height=Math.round(width*1.4),cardWidth=Math.round(width*.80),cardHeight=Math.round(cardWidth*1.4);
   // Capture in an offscreen subtree; same selectors preserve all 24 finishes and custom text.
   host.style.cssText=`position:fixed;left:0;top:0;z-index:-999;width:${cardWidth}px;height:${cardHeight}px;overflow:hidden;isolation:isolate;pointer-events:none;`;
   clone.style.setProperty('width',cardWidth+'px','important');clone.style.setProperty('height',cardHeight+'px','important');clone.style.setProperty('max-width','none','important');clone.style.setProperty('position','absolute','important');clone.style.setProperty('left',(width-cardWidth)/2+'px');clone.style.setProperty('top',(height-cardHeight)/2+'px');clone.style.setProperty('transition','none','important');clone.style.setProperty('transform','none');
@@ -31,12 +39,13 @@ async function snapshotSource(width){
 }
 async function capture(scene,phase,animated){
   check();const angle=phase*Math.PI*2;
-  const rx=animated?Math.sin(angle)*7:-3,ry=animated?Math.sin(angle+Math.PI/4)*12:-7;
+  const rx=animated?Math.sin(angle)*7:0,ry=animated?Math.sin(angle+Math.PI/4)*12:0;
   scene.clone.style.transform='none';
   scene.clone.style.setProperty('--mx',(animated?50+34*Math.sin(angle):55)+'%');scene.clone.style.setProperty('--my',(animated?50+28*Math.cos(angle):40)+'%');scene.clone.style.setProperty('--angle',(animated?125+35*Math.sin(angle):135)+'deg');
   const flat=await htmlToImage.toCanvas(scene.clone.querySelector('.front'),{width:scene.cardWidth,height:scene.cardHeight,pixelRatio:1,skipFonts:true,style:{position:'relative',inset:'auto',left:'0',top:'0',transform:'none',backfaceVisibility:'visible',width:scene.cardWidth+'px',height:scene.cardHeight+'px'}});check();
   const canvas=document.createElement('canvas');canvas.width=scene.width;canvas.height=scene.height;const ctx=canvas.getContext('2d');ctx.fillStyle='#0c1511';ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.translate(canvas.width/2+(animated?Math.sin(angle)*5:0),canvas.height/2+(animated?Math.cos(angle)*4:0));ctx.transform(Math.cos(ry*Math.PI/180),Math.sin(ry*Math.PI/180)*.10,Math.sin(rx*Math.PI/180)*.15,Math.cos(rx*Math.PI/180),0,0);ctx.shadowColor='#0008';ctx.shadowBlur=16;ctx.shadowOffsetY=10;ctx.drawImage(flat,-scene.cardWidth/2,-scene.cardHeight/2);return canvas;
+  // No offset drop shadow: it produced a dark strip below the rounded card edge.
+  ctx.translate(canvas.width/2+(animated?Math.sin(angle)*5:0),canvas.height/2+(animated?Math.cos(angle)*4:0));ctx.transform(Math.cos(ry*Math.PI/180),Math.sin(ry*Math.PI/180)*.10,Math.sin(rx*Math.PI/180)*.15,Math.cos(rx*Math.PI/180),0,0);ctx.drawImage(flat,-scene.cardWidth/2,-scene.cardHeight/2,scene.cardWidth,scene.cardHeight);return canvas;
 }
 async function record(frames,width,height,mime){
   const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d');
@@ -55,12 +64,17 @@ async function record(frames,width,height,mime){
   }finally{clearTimeout(timer);if(recorder?.state==='recording')recorder.stop();stream?.getTracks().forEach(t=>t.stop());images.forEach(i=>i.close());}
 }
 function showResult(blob,kind){
-  if(resultURL)URL.revokeObjectURL(resultURL);resultURL=URL.createObjectURL(blob);result.replaceChildren();
-  const preview=document.createElement(kind==='video'?'video':'img');preview.className='export-preview';preview.src=resultURL;
+  const key=resultKey(),previous=results.get(key);
+  if(previous)URL.revokeObjectURL(previous.url);
+  const entry={blob,kind,url:URL.createObjectURL(blob),created:Date.now()};results.set(key,entry);renderResult(entry,false);
+}
+function renderResult(entry,cached){
+  const {blob,kind,url,created}=entry;result.querySelector('video')?.pause();result.replaceChildren();
+  const preview=document.createElement(kind==='video'?'video':'img');preview.className='export-preview';preview.src=url;
   if(kind==='video'){preview.controls=true;preview.loop=true;preview.muted=true;preview.playsInline=true;}else preview.alt='导出效果预览';
   const ext=kind==='video'?(blob.type.includes('mp4')?'mp4':'webm'):kind;
-  const link=document.createElement('a');link.className='export-save';link.href=resultURL;link.download=`holo-card-${Date.now()}.${ext}`;link.textContent=`保存 ${ext.toUpperCase()} · ${(blob.size/1024/1024).toFixed(2)} MB`;
-  result.append(preview,link);result.hidden=false;report('生成完成，预览后点击保存。',100);
+  const link=document.createElement('a');link.className='export-save';link.href=url;link.download=`holo-card-${created}.${ext}`;link.textContent=`保存 ${ext.toUpperCase()} · ${(blob.size/1024/1024).toFixed(2)} MB`;
+  result.append(preview,link);result.hidden=false;progress.hidden=false;start.textContent='重新生成';report(cached?'已恢复此格式和尺寸的上次结果；卡面有修改时请点重新生成。':'生成完成，预览后点击保存。',100);
 }
 start.addEventListener('click',async()=>{
   if(busy)return;busy=true;aborted=false;start.disabled=true;format.disabled=true;size.disabled=true;cancel.hidden=false;progress.hidden=false;status.classList.remove('export-error');result.hidden=true;
@@ -81,5 +95,5 @@ start.addEventListener('click',async()=>{
   }catch(error){status.textContent=error.name==='AbortError'?'已取消，可重新生成。':`导出失败：${error.message||'浏览器无法绘制当前素材，请换图或使用 Chrome 重试。'}`;status.classList.toggle('export-error',error.name!=='AbortError');}
   finally{scene?.host.remove();worker?.terminate();worker=null;busy=false;start.disabled=false;format.disabled=false;size.disabled=false;cancel.hidden=true;}
 });
-addEventListener('pagehide',()=>{aborted=true;worker?.terminate();if(resultURL)URL.revokeObjectURL(resultURL);});
+addEventListener('pagehide',()=>{aborted=true;worker?.terminate();for(const entry of results.values())URL.revokeObjectURL(entry.url);results.clear();});
 })();
