@@ -150,6 +150,7 @@ skills/holo-card-preview/
     index.html                   默认跳转桌面版
     studio.html / studio.js      共享页面与业务逻辑
     studio.css                   基础布局与卡片样式
+    dark-theme.css / dark-fix.css 暗黑主题覆盖层
     foil-styles.css              材质控件与基础纹理
     foil-library.css             扩展纹理与分组样式
     mobile.html                  iPhone 外壳
