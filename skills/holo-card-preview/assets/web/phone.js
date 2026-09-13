@@ -1,6 +1,8 @@
 // Presentation adapter only. Upload, text, finishes and card gestures live in studio.js.
 document.body.classList.add('phone');
 const phoneCss=document.createElement('link');phoneCss.rel='stylesheet';phoneCss.href='phone.css';document.head.append(phoneCss);
+const phoneOverrides=document.createElement('link');phoneOverrides.rel='stylesheet';phoneOverrides.href='phone-overrides.css?v=20260913b';document.head.append(phoneOverrides);
+const phoneLayout=document.createElement('style');phoneLayout.textContent='.phone .phone-sheet{height:min(250px,38svh)}.phone .phone-sheet[data-panel="export"]{height:min(540px,76svh)}.phone-sheet::backdrop{background:#0002;backdrop-filter:none;-webkit-backdrop-filter:none}.phone .export-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:15px 0}.phone .export-toolbar .export-actions{display:flex;gap:8px;margin:0}.phone .export-toolbar .export-save{display:flex;align-items:center;justify-content:center;min-height:44px;margin:0}.phone #export-save-slot{margin-left:auto}';document.head.append(phoneLayout);
 const phoneStatus=document.createElement('div');phoneStatus.className='phone-status';phoneStatus.innerHTML='<span>9:41</span><div class="island" aria-hidden="true"></div><span aria-label="信号和电量">▮▮▮ &nbsp; ▰</span>';document.body.prepend(phoneStatus);
 const appHeader=document.querySelector('header');appHeader.innerHTML='<div><small>YOUR POCKET GALLERY</small><b>光的收藏室<span>✦</span></b></div><button class="phone-info" aria-label="使用说明">?</button>';
 const stage=document.querySelector('.stage'),main=document.querySelector('main');
@@ -18,7 +20,7 @@ const names={image:'更换卡面',text:'编辑文案',finish:'镭射材质',adju
 const nav=document.createElement('nav');nav.className='phone-nav';nav.setAttribute('aria-label','卡片工具');nav.innerHTML=[['image','▧','图片'],['text','Aa','文案'],['finish','✧','材质'],['adjust','☷','调节'],['export','↓','导出']].map(([id,icon,name])=>`<button data-panel="${id}" aria-haspopup="dialog"><span>${icon}</span>${name}</button>`).join('');document.body.append(nav);
 document.querySelector('footer').remove();const home=document.createElement('div');home.className='home-indicator';home.setAttribute('aria-hidden','true');document.body.append(home);
 let sheetTrigger;
-function openPanel(id,trigger){sheetTrigger=trigger;for(const [key,panel] of Object.entries(panelMap))panel.hidden=key!==id;sheet.querySelector('#sheet-title').textContent=names[id];sheet.showModal();content.scrollTop=0;}
+function openPanel(id,trigger){sheetTrigger=trigger;sheet.dataset.panel=id;for(const [key,panel] of Object.entries(panelMap))panel.hidden=key!==id;sheet.querySelector('#sheet-title').textContent=names[id];sheet.showModal();content.scrollTop=0;}
 nav.addEventListener('click',e=>{const button=e.target.closest('[data-panel]');if(button)openPanel(button.dataset.panel,button);});
 sheet.querySelector('.sheet-done').addEventListener('click',()=>sheet.close());
 sheet.addEventListener('click',e=>{if(e.target===sheet){const r=sheet.getBoundingClientRect();if(e.clientY<r.top||e.clientX<r.left||e.clientX>r.right)sheet.close();}});

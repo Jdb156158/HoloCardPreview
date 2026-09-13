@@ -1,0 +1,8 @@
+/* Compact setting sheets keep the live card visible; export keeps its preview height. */
+.phone .phone-sheet{height:min(250px,38svh)}
+.phone .phone-sheet[data-panel="export"]{height:min(540px,76svh)}
+.phone-sheet::backdrop{background:#0002;backdrop-filter:none;-webkit-backdrop-filter:none}
+.phone .export-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:15px 0}
+.phone .export-toolbar .export-actions{display:flex;gap:8px;margin:0}
+.phone .export-toolbar .export-save{display:flex;align-items:center;justify-content:center;min-height:44px;margin:0}
+.phone #export-save-slot{margin-left:auto}

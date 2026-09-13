@@ -2,16 +2,16 @@
 (()=>{
 const css=document.createElement('link');css.rel='stylesheet';css.href='export.css';document.head.append(css);
 const panel=document.createElement('section');panel.className='export-panel';
-panel.innerHTML=`<h3>导出卡片</h3><div class="export-options"><label>格式<select id="export-format"><option value="png">PNG · 静态卡面</option><option value="gif">GIF · 循环动图</option><option value="video">视频 · 自动感光</option></select></label><label>画面尺寸<select id="export-size"><option value="480">480 × 672</option><option value="720">720 × 1008</option></select></label></div><p id="export-description">导出当前材质与文案的正面静态效果，含深色背景。</p><p class="export-note">动图与视频：4 秒柔和摆动 + 滑动感光，不录制界面或手机外壳。生成期间请保持本页可见。</p><div class="export-actions"><button id="export-start" type="button">生成文件</button><button id="export-cancel" class="export-cancel" type="button" hidden>取消</button></div><progress id="export-progress" max="100" value="0" hidden></progress><p id="export-status" role="status" aria-live="polite"></p><div id="export-result" hidden></div>`;
+panel.innerHTML=`<h3>导出卡片</h3><div class="export-options"><label>格式<select id="export-format"><option value="png">PNG · 静态卡面</option><option value="gif">GIF · 循环动图</option><option value="video">视频 · 自动感光</option></select></label><label>画面尺寸<select id="export-size"><option value="480">480 × 672</option><option value="720">720 × 1008</option></select></label></div><p id="export-description">导出当前材质与文案的正面静态效果，含深色背景。</p><p class="export-note">动图与视频：4 秒柔和摆动 + 滑动感光，不录制界面或手机外壳。生成期间请保持本页可见。</p><div class="export-toolbar"><div class="export-actions"><button id="export-start" type="button">生成文件</button><button id="export-cancel" class="export-cancel" type="button" hidden>取消</button></div><div id="export-save-slot"></div></div><progress id="export-progress" max="100" value="0" hidden></progress><p id="export-status" role="status" aria-live="polite"></p><div id="export-result" hidden></div>`;
 document.querySelector('.settings').append(panel);
-const $=s=>panel.querySelector(s),format=$('#export-format'),size=$('#export-size'),start=$('#export-start'),cancel=$('#export-cancel'),status=$('#export-status'),progress=$('#export-progress'),result=$('#export-result');
+const $=s=>panel.querySelector(s),format=$('#export-format'),size=$('#export-size'),start=$('#export-start'),cancel=$('#export-cancel'),status=$('#export-status'),progress=$('#export-progress'),result=$('#export-result'),saveSlot=$('#export-save-slot');
 let busy=false,aborted=false,worker=null,libPromise;
 const results=new Map();
 const resultKey=()=>`${format.value}:${size.value}`;
 const videoMime=()=>typeof MediaRecorder==='undefined'?'':['video/mp4;codecs=avc1.42001E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m=>MediaRecorder.isTypeSupported(m));
 format.addEventListener('change',()=>{$('#export-description').textContent=format.value==='png'?'导出当前材质与文案的正面静态效果，含深色背景。':format.value==='gif'?'GIF：60 帧 / 4 秒，无限循环。256 色量化可能使渐变略有颗粒。':`视频：4 秒，优先 MP4，当前浏览器${videoMime()?.startsWith('video/mp4')?'支持 MP4':videoMime()?'使用 WebM':'不支持视频编码'}。`;});
 function restoreResult(){
-  result.querySelector('video')?.pause();result.replaceChildren();result.hidden=true;
+  result.querySelector('video')?.pause();result.replaceChildren();saveSlot.replaceChildren();result.hidden=true;
   status.classList.remove('export-error');status.textContent='';progress.value=0;progress.hidden=true;cancel.hidden=true;start.textContent='生成文件';
   const cached=results.get(resultKey());if(cached)renderResult(cached,true);
 }
@@ -74,7 +74,7 @@ function renderResult(entry,cached){
   if(kind==='video'){preview.controls=true;preview.loop=true;preview.muted=true;preview.playsInline=true;}else preview.alt='导出效果预览';
   const ext=kind==='video'?(blob.type.includes('mp4')?'mp4':'webm'):kind;
   const link=document.createElement('a');link.className='export-save';link.href=url;link.download=`holo-card-${created}.${ext}`;link.textContent=`保存 ${ext.toUpperCase()} · ${(blob.size/1024/1024).toFixed(2)} MB`;
-  result.append(preview,link);result.hidden=false;progress.hidden=false;start.textContent='重新生成';report(cached?'已恢复此格式和尺寸的上次结果；卡面有修改时请点重新生成。':'生成完成，预览后点击保存。',100);
+  result.append(preview);saveSlot.append(link);result.hidden=false;progress.hidden=false;start.textContent='重新生成';report(cached?'已恢复此格式和尺寸的上次结果；卡面有修改时请点重新生成。':'生成完成，预览后点击保存。',100);
 }
 start.addEventListener('click',async()=>{
   if(busy)return;busy=true;aborted=false;start.disabled=true;format.disabled=true;size.disabled=true;cancel.hidden=false;progress.hidden=false;status.classList.remove('export-error');result.hidden=true;

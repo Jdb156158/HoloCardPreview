@@ -154,6 +154,7 @@ skills/holo-card-preview/
     foil-library.css             扩展纹理与分组样式
     mobile.html                  iPhone 外壳
     phone.js / phone.css         手机布局适配
+    phone-overrides.css          手机弹层高度及导出按钮布局
     export.js / export.css       共享导出面板和逐帧渲染
     gif-worker.js                GIF 量化与编码线程
     vendor/                      固定版本浏览器依赖与许可证
