@@ -3,3 +3,17 @@
 .finish-choice{background:#11141b;border-color:#343b49;color:#cdd3df}.finish-choice:has(input:checked){background:#2b303d;border-color:#d6dbe7;color:#f0f2f7}.finish-chip{filter:saturate(.8)}
 .upload-options select{background:#11141b;color:#d9dee8;border-color:#343b49}.upload-panel input::file-selector-button{background:#202530;color:#dce1ea;border-color:#404858}.upload-help,#upload-status,#finish-description{color:#8b94a5}.text-panel label{color:#a9b1c0}
 .export-panel{border-color:#343b49;color:#dce1ea}.export-panel p,.export-note{color:#939baa}.export-panel select{background:#11141b;color:#dce1ea;border-color:#3c4555}.phone .phone-quick button{background:#1b202a!important;border-color:#353d4b}.phone-nav{border-color:#292f3b}
+body.phone{background:#080a0f!important;color:#e7e9ef!important}
+.phone header small,.phone .edition-pill,.phone .phone-card-meta p,.phone #active-finish,.phone .hint,.phone .note{color:#9199a8!important}
+.phone header b,.phone .phone-card-meta h1,.phone-nav button span,.phone-nav button,.phone #active-finish:before{color:#e1e4eb!important}
+.phone .phone-info{background:#11141b!important;border-color:#4a5261!important;color:#dce1ea!important}
+.phone .phone-quick button{background:#181c25!important;border-color:#343b49!important;color:#dce1ea!important}
+.phone-nav{border-color:#292f3b!important}.phone-nav button{background:transparent!important}
+.phone .phone-sheet{background:#0d1016!important;border-color:#343b49!important;color:#e7e9ef!important;box-shadow:0 -18px 55px #000b!important}
+.phone .sheet-grab span{background:#687181!important}.phone .sheet-done{color:#e4e7ee!important}
+.phone input[type=range]{accent-color:#cfd5e0!important}.phone input[type=range]::-webkit-slider-thumb{background:#d8dde7!important}
+.phone .text-toggle input[type=checkbox]{background:#303643!important}.phone .text-toggle input[type=checkbox]:checked{background:#66728a!important}
+.phone .upload-panel input::file-selector-button,.phone .export-panel button,.phone .export-save{background:#d8dce5!important;color:#11151d!important;border-color:#d8dce5!important}
+.phone .export-cancel{background:#181c25!important;color:#dce1ea!important;border-color:#3b4352!important}
+.phone .export-panel select,.phone .upload-options select,.phone .text-panel input[type="text"]{background:#10131a!important;color:#e2e5ec!important;border-color:#3a4250!important}
+.phone .finish-choice{background:#10131a!important;border-color:#323a48!important;color:#cfd4df!important}.phone .finish-choice:has(input:checked){background:#292f3b!important;border-color:#d1d7e2!important;color:#f1f3f7!important}
