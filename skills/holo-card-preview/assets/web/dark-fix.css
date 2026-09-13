@@ -1,1 +1,5 @@
 .text-panel input[type="text"]{background:#151922;color:#dce1ea;border-color:#3c4555}
+.phone .phone-sheet,.phone .finish-choice,.phone .upload-options select,.phone .text-panel input[type="text"]{background:#11141b!important;color:#e4e7ee;border-color:#343b49}
+.finish-choice{background:#11141b;border-color:#343b49;color:#cdd3df}.finish-choice:has(input:checked){background:#2b303d;border-color:#d6dbe7;color:#f0f2f7}.finish-chip{filter:saturate(.8)}
+.upload-options select{background:#11141b;color:#d9dee8;border-color:#343b49}.upload-panel input::file-selector-button{background:#202530;color:#dce1ea;border-color:#404858}.upload-help,#upload-status,#finish-description{color:#8b94a5}.text-panel label{color:#a9b1c0}
+.export-panel{border-color:#343b49;color:#dce1ea}.export-panel p,.export-note{color:#939baa}.export-panel select{background:#11141b;color:#dce1ea;border-color:#3c4555}.phone .phone-quick button{background:#1b202a!important;border-color:#353d4b}.phone-nav{border-color:#292f3b}
